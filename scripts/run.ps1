@@ -1,4 +1,4 @@
-# Exit on error
+﻿# Exit on error
 $ErrorActionPreference = "Stop"
 
 # App name
@@ -33,7 +33,7 @@ Set-Location -Path $BuildDir
 
 # Run CMake with vcpkg toolchain
 Write-Host "⚙️ Running CMake..."
-& cmake .. -DCMAKE_TOOLCHAIN_FILE=../pkg/scripts/buildsystems/vcpkg.cmake
+& cmake .. -DCMAKE_TOOLCHAIN_FILE=../$VcpkgDir/scripts/buildsystems/vcpkg.cmake
 
 # Build project
 Write-Host "🏗️ Building project..."

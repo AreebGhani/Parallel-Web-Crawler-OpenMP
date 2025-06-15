@@ -1,12 +1,13 @@
 const os = require("os");
+const path = require("path");
 const { execSync } = require("child_process");
 
 const isWindows = os.platform() === "win32";
-const projectRoot = __dirname;
+const rootDir = __dirname;
 
 function runCommand(cmd) {
   try {
-    execSync(cmd, { stdio: "inherit", cwd: projectRoot });
+    execSync(cmd, { stdio: "inherit", cwd: rootDir });
   } catch (err) {
     console.error(`Command failed: ${cmd}`);
     process.exit(1);
@@ -30,8 +31,15 @@ function run() {
   // Memory Information
   console.log("Memory: ", `${(os.totalmem() / 1024 / 1024).toFixed(2)} MB`);
   console.log("----------------------\n");
-  const script = isWindows ? "./scripts/run.ps1" : "bash ./scripts/run.sh";
-  runCommand(script);
+  const scriptPath = path.resolve(
+    rootDir,
+    "scripts",
+    `run.${isWindows ? "ps1" : "sh"}`
+  );
+  const shellCommand = isWindows
+    ? `powershell -ExecutionPolicy Bypass -File "${scriptPath}"`
+    : `bash "${scriptPath}"`;
+  runCommand(shellCommand);
 }
 
 run();
