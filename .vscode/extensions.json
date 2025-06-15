@@ -1,0 +1,24 @@
+{
+  "recommendations": [
+    "aaron-bond.better-comments",
+    "adpyke.codesnap",
+    "foxundermoon.shell-format",
+    "marcoangelo.monokai-dark-ninja",
+    "ms-vscode.cmake-tools",
+    "kylinideteam.cmake-intellisence",
+    "ms-vscode.cpptools",
+    "ms-vscode.cpptools-extension-pack",
+    "ms-vscode.cpptools-themes",
+    "ms-vscode.makefile-tools",
+    "steoates.autoimport",
+    "usernamehw.errorlens",
+    "visualstudioexptteam.intellicode-api-usage-examples",
+    "visualstudioexptteam.vscodeintellicode",
+    "vscode-icons-team.vscode-icons",
+    "wholroyd.jinja",
+    "wix.vscode-import-cost",
+    "zainchen.json",
+    "xabikos.javascriptsnippets",
+    "esbenp.prettier-vscode"
+  ]
+}

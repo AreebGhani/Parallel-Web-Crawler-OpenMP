@@ -1,0 +1,11 @@
+{
+  "name": "web-crawler",
+  "version": "1.0.0",
+  "description": "Parallel Web Crawler using C++ and OpenMP",
+  "license": "ISC",
+  "dependencies": [
+    "wxwidgets",
+    "curl",
+    "gumbo"
+  ]
+}

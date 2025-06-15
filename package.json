@@ -1,0 +1,16 @@
+{
+  "name": "web-crawler",
+  "version": "1.0.0",
+  "description": "Parallel Web Crawler using C++ and OpenMP",
+  "license": "ISC",
+  "author": "AreebGhani <areebghanidps@gmail.com>",
+  "private": false,
+  "type": "commonjs",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "start": "node index.js"
+  }
+}

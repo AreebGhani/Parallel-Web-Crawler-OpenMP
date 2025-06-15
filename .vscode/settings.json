@@ -1,0 +1,24 @@
+{
+    "workbench.iconTheme": "vscode-icons",
+    "workbench.layoutControl.enabled": false,
+    "editor.fontSize": 14,
+    "workbench.colorTheme": "Monokai Dark Ninja",
+    "editor.cursorStyle": "line-thin",
+    "editor.cursorBlinking": "expand",
+    "editor.cursorSurroundingLines": 1,
+    "editor.cursorWidth": 10,
+    "editor.cursorSmoothCaretAnimation": "on",
+    "editor.lineHeight": 30,
+    "editor.fontWeight": "normal",
+    "terminal.integrated.fontFamily": "MesloLGS NF",
+    "window.commandCenter": false,
+    "hediet.vscode-drawio.resizeImages": null,
+    "editor.renderWhitespace": "all",
+    "editor.minimap.renderCharacters": false,
+    "[json]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "files.associations": {
+        "iostream": "cpp"
+    }
+}
