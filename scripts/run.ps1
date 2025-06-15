@@ -23,17 +23,19 @@ $env:VCPKG_FEATURE_FLAGS = "manifests"
 Write-Host "📦 Installing dependencies..."
 & "$VcpkgDir\vcpkg.exe" install
 
-# Create build directory
-if (!(Test-Path -Path $BuildDir)) {
-    Write-Host "📁 Creating build directory..."
-    New-Item -ItemType Directory -Path $BuildDir | Out-Null
+# Delete old build directory (clean build)
+if (Test-Path $BuildDir) {
+    Write-Host "🧹 Removing old build directory..."
+    Remove-Item -Recurse -Force $BuildDir
 }
+Write-Host "📁 Creating build directory..."
+New-Item -ItemType Directory -Path $BuildDir | Out-Null
 
 Set-Location -Path $BuildDir
 
 # Run CMake with vcpkg toolchain
 Write-Host "⚙️ Running CMake..."
-& cmake .. -DCMAKE_TOOLCHAIN_FILE=../$VcpkgDir/scripts/buildsystems/vcpkg.cmake
+& cmake .. -G "MinGW Makefiles" -DCMAKE_TOOLCHAIN_FILE=../$VcpkgDir/scripts/buildsystems/vcpkg.cmake
 
 # Build project
 Write-Host "🏗️ Building project..."

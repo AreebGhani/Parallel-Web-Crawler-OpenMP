@@ -26,7 +26,11 @@ export VCPKG_FEATURE_FLAGS="manifests"
 echo "📦 Installing dependencies..."
 "$VCPKG_DIR/vcpkg" install
 
-# Create build directory if it doesn't exist
+# Delete old build directory (clean build)
+if [ -d "build" ]; then
+  echo "🧹 Removing old build directory..."
+  rm -rf build
+fi
 echo "📁 Setting up build directory..."
 mkdir -p build
 cd build
