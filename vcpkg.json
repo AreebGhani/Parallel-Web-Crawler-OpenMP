@@ -4,8 +4,8 @@
   "description": "Parallel Web Crawler using C++ and OpenMP",
   "license": "ISC",
   "dependencies": [
-    "wxwidgets",
     "curl",
+    "wxwidgets",
     "gumbo"
   ]
 }
