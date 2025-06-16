@@ -35,7 +35,7 @@ Set-Location -Path $BuildDir
 
 # Run CMake with vcpkg toolchain
 Write-Host "⚙️ Running CMake..."
-& cmake .. -G "MinGW Makefiles" -DCMAKE_TOOLCHAIN_FILE=../$VcpkgDir/scripts/buildsystems/vcpkg.cmake
+& cmake .. -DCMAKE_TOOLCHAIN_FILE="$VcpkgDir\scripts\buildsystems\vcpkg.cmake"
 
 # Build project
 Write-Host "🏗️ Building project..."
