@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include <curl/curl.h>
 
 std::string fetchHTML(const std::string &url);

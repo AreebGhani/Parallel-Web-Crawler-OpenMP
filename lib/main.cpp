@@ -34,6 +34,8 @@ IMPLEMENT_APP(MyApp)
 
 bool MyApp::OnInit()
 {
+    wxInitAllImageHandlers();
+
     std::string html = fetchHTML("https://books.toscrape.com/");
     std::vector<Book> books = parseBooks(html);
 
