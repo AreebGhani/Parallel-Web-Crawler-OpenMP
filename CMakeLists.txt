@@ -10,7 +10,11 @@ find_package(unofficial-gumbo CONFIG REQUIRED)
 
 include(${wxWidgets_USE_FILE})
 
-add_executable(WebCrawlerApp ./lib/main.cpp)
+add_executable(WebCrawlerApp
+    lib/main.cpp
+    lib/fetch.cpp
+    lib/parser.cpp
+)
 
 target_link_libraries(WebCrawlerApp
     ${wxWidgets_LIBRARIES}
