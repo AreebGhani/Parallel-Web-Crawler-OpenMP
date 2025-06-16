@@ -1,5 +1,8 @@
-#include <vector>
+#include <iostream>
 #include <string>
+#include <vector>
+#include <thread>
+#include <omp.h> 
 
 #include <wx/wx.h>
 #include <wx/app.h>
@@ -55,7 +58,7 @@ bool MyApp::OnInit()
 }
 
 MyFrame::MyFrame()
-    : wxFrame(nullptr, wxID_ANY, "Books to Scrape", wxDefaultPosition, wxSize(1024, 720))
+    : wxFrame(nullptr, wxID_ANY, "Web Crawler App", wxDefaultPosition, wxSize(1024, 720))
 {
     mainPanel = new wxPanel(this);
     mainSizer = new wxBoxSizer(wxVERTICAL);
@@ -97,31 +100,6 @@ MyFrame::MyFrame()
     mainPanel->SetSizer(mainSizer);
 }
 
-void MyFrame::ShowCategories(const std::vector<Category> &categories)
-{
-    wxPanel *sidePanel = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxSize(200, -1));
-    wxBoxSizer *sideSizer = new wxBoxSizer(wxVERTICAL);
-
-    sideSizer->Add(new wxStaticText(sidePanel, wxID_ANY, "Categories"), 0, wxALL | wxALIGN_CENTER, 10);
-
-    for (const Category &cat : categories)
-    {
-        wxHyperlinkCtrl *link = new wxHyperlinkCtrl(sidePanel, wxID_ANY, cat.name, "https://books.toscrape.com/" + cat.url);
-        sideSizer->Add(link, 0, wxLEFT | wxRIGHT | wxTOP, 5);
-    }
-
-    sidePanel->SetSizer(sideSizer);
-
-    // Add to main sizer (assuming a main horizontal sizer)
-    wxBoxSizer *mainSizer = new wxBoxSizer(wxHORIZONTAL);
-    mainSizer->Add(sidePanel, 0, wxEXPAND);
-    wxPanel *booksPanel = new wxPanel(this);
-    booksPanel->SetMinSize(wxSize(800, -1)); // leave space for grid
-    mainSizer->Add(booksPanel, 1, wxEXPAND);
-
-    SetSizer(mainSizer);
-}
-
 void MyFrame::OnFetchBooks(wxCommandEvent &event)
 {
     fetchButton->Disable();
@@ -130,18 +108,44 @@ void MyFrame::OnFetchBooks(wxCommandEvent &event)
     Layout();
     Refresh();
 
-    // Simulate fetch delay using CallAfter
-    wxYield();
+    std::thread([this]()
+    {
+        std::string html = fetchHTML("https://books.toscrape.com/");
+        std::vector<Category> categories = parseCategories(html);
 
-    std::string html = fetchHTML("https://books.toscrape.com/");
-    std::vector<Book> books = parseBooks(html);
-
-    // ShowBooks(books);
-    loadingText->Hide();
-    scrollPanel->Show();
-    fetchButton->Enable();
-    Layout();
-    Refresh();
+        std::vector<Book> allBooks;
+        #pragma omp parallel
+        {
+            std::vector<Book> localBooks;
+            #pragma omp for nowait schedule(dynamic)
+            for (int i = 0; i < categories.size(); ++i)
+            {
+                try
+                {
+                    std::string catHtml = fetchHTML(categories[i].url);
+                    std::vector<Book> books = parseBooks(catHtml, categories[i].url);
+                    #pragma omp critical
+                    {
+                        allBooks.insert(allBooks.end(), books.begin(), books.end());
+                    }
+                }
+                catch (...)
+                {
+                    // Handle or skip
+                }
+            }
+        }
+        wxTheApp->CallAfter([this, allBooks]()
+        {
+            ShowBooks(allBooks);
+            loadingText->Hide();
+            scrollPanel->Show();
+            fetchButton->Enable();
+            Layout();
+            Refresh();
+        });
+    })
+    .detach();
 }
 
 void MyFrame::ShowBooks(const std::vector<Book> &books)
@@ -153,13 +157,13 @@ void MyFrame::ShowBooks(const std::vector<Book> &books)
         wxPanel *bookPanel = new wxPanel(scrollPanel, wxID_ANY, wxDefaultPosition, wxSize(220, 320));
         wxBoxSizer *bookSizer = new wxBoxSizer(wxVERTICAL);
 
-        wxBitmap bitmap = LoadImageFromUrl(book.imageUrl);
-        wxStaticBitmap *imageCtrl = new wxStaticBitmap(bookPanel, wxID_ANY, bitmap, wxDefaultPosition, wxSize(150, 200));
+        // wxBitmap bitmap = LoadImageFromUrl(book.imageUrl);
+        // wxStaticBitmap *imageCtrl = new wxStaticBitmap(bookPanel, wxID_ANY, bitmap, wxDefaultPosition, wxSize(150, 200));
 
         wxStaticText *titleText = new wxStaticText(bookPanel, wxID_ANY, book.title);
         titleText->Wrap(200);
 
-        bookSizer->Add(imageCtrl, 0, wxALIGN_CENTER | wxALL, 5);
+        // bookSizer->Add(imageCtrl, 0, wxALIGN_CENTER | wxALL, 5);
         bookSizer->Add(titleText, 0, wxALIGN_CENTER | wxBOTTOM, 5);
         bookSizer->Add(new wxStaticText(bookPanel, wxID_ANY, "Price: " + book.price), 0, wxALIGN_CENTER);
         bookSizer->Add(new wxStaticText(bookPanel, wxID_ANY, "Rating: " + book.rating), 0, wxALIGN_CENTER);
@@ -172,6 +176,8 @@ void MyFrame::ShowBooks(const std::vector<Book> &books)
 
     scrollPanel->FitInside();
     scrollPanel->Layout();
+    Layout();
+    Refresh();
 }
 
 wxBitmap MyFrame::LoadImageFromUrl(const std::string &url)

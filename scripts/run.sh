@@ -41,7 +41,7 @@ cmake .. -DCMAKE_TOOLCHAIN_FILE="../pkg/scripts/buildsystems/vcpkg.cmake"
 
 # Build the project
 echo "🏗️ Building $APP_NAME..."
-make
+make -j$(nproc)
 
 # Run the application
 echo "🚀 Running $APP_NAME..."

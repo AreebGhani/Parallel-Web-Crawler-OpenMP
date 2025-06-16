@@ -21,7 +21,8 @@
     "files.associations": {
         "iostream": "cpp",
         "string": "cpp",
-        "stdexcept": "cpp"
+        "stdexcept": "cpp",
+        "vector": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled",
 }
