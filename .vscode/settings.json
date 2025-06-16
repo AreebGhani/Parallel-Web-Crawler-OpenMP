@@ -19,6 +19,9 @@
         "editor.defaultFormatter": "vscode.json-language-features"
     },
     "files.associations": {
-        "iostream": "cpp"
-    }
+        "iostream": "cpp",
+        "string": "cpp",
+        "stdexcept": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "disabled",
 }
