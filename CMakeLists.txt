@@ -17,9 +17,10 @@ else()
 endif()
 
 add_executable(WebCrawlerApp ${GUI_TYPE}
-    lib/main.cpp
-    lib/fetch.cpp
-    lib/parser.cpp
+    src/main.cpp
+    src/fetch.cpp
+    src/parser.cpp
+    src/assets/logo.xpm
 )
 
 target_link_libraries(WebCrawlerApp

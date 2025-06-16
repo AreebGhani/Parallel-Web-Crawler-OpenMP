@@ -69,7 +69,7 @@ void searchBooks(GumboNode *node, std::vector<Book> &books)
                     GumboNode *img = static_cast<GumboNode *>(a->v.element.children.data[0]);   // <img>
                     GumboAttribute *src = gumbo_get_attribute(&img->v.element.attributes, "src");
                     if (src)
-                        book.imageUrl = src->value;
+                        book.imageUrl = std::string("https://books.toscrape.com/") + src->value;
                 }
 
                 // Rating
@@ -131,4 +131,51 @@ std::vector<Book> parseBooks(const std::string &html)
     searchBooks(output->root, books);
     gumbo_destroy_output(&kGumboDefaultOptions, output);
     return books;
+}
+
+static void searchForCategoryLinks(GumboNode *node, std::vector<Category> &categories)
+{
+    if (!node || node->type != GUMBO_NODE_ELEMENT)
+        return;
+
+    GumboAttribute *href;
+    if (node->v.element.tag == GUMBO_TAG_A &&
+        (href = gumbo_get_attribute(&node->v.element.attributes, "href")))
+    {
+
+        // Only include categories (skip the top-level "Books" if needed)
+        std::string url = href->value;
+        std::string name;
+
+        if (node->v.element.children.length > 0)
+        {
+            GumboNode *textNode = static_cast<GumboNode *>(node->v.element.children.data[0]);
+            if (textNode->type == GUMBO_NODE_TEXT)
+            {
+                name = textNode->v.text.text;
+                name.erase(0, name.find_first_not_of(" \n\t")); // trim left
+                name.erase(name.find_last_not_of(" \n\t") + 1); // trim right
+
+                if (!name.empty() && url.find("category") != std::string::npos)
+                {
+                    categories.push_back({name, url});
+                }
+            }
+        }
+    }
+
+    const GumboVector *children = &node->v.element.children;
+    for (size_t i = 0; i < children->length; ++i)
+    {
+        searchForCategoryLinks(static_cast<GumboNode *>(children->data[i]), categories);
+    }
+}
+
+std::vector<Category> parseCategories(const std::string &html)
+{
+    std::vector<Category> categories;
+    GumboOutput *output = gumbo_parse(html.c_str());
+    searchForCategoryLinks(output->root, categories);
+    gumbo_destroy_output(&kGumboDefaultOptions, output);
+    return categories;
 }

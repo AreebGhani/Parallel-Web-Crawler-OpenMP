@@ -11,3 +11,9 @@ struct Book
     std::string price;
     std::string availability;
 };
+
+struct Category
+{
+    std::string name;
+    std::string url;
+};
