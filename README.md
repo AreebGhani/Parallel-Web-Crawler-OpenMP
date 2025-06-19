@@ -49,6 +49,20 @@ This project uses **vcpkg** for dependency management and **Node.js** for cross-
 
 ---
 
+## 🔧 Required Tools
+
+Make sure the following tools are installed before building the project:
+
+| Tool                    | Description                                      | Download Link                                      |
+|-------------------------|--------------------------------------------------|----------------------------------------------------|
+| Visual Studio (Community) | Full-featured C++ IDE and MSVC compiler         | [Download Visual Studio](https://visualstudio.microsoft.com/vs/community/) |
+| CMake                   | Cross-platform build automation tool             | [Download CMake](https://cmake.org/download/)      |
+| Node.js                 | JavaScript runtime for project scripts           | [Download Node.js](https://nodejs.org/en/download) |
+
+> ⚠️ **Note:** Visual Studio must be installed with **Desktop development with C++** workload.
+
+---
+
 ## 📦 Dependencies
 
 ### Managed via [vcpkg](https://github.com/microsoft/vcpkg)
