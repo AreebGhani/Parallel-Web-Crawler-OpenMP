@@ -27,7 +27,7 @@ find_package(CURL REQUIRED)
 find_package(unofficial-gumbo CONFIG REQUIRED)
 
 include(${wxWidgets_USE_FILE})
-include_directories(${CMAKE_SOURCE_DIR}/src/includes)
+include_directories(${CMAKE_SOURCE_DIR}/src/include)
 
 # -------- WIN32 flag for Windows --------
 if(WIN32)

@@ -118,6 +118,24 @@ void MyFrame::ShowBooks(const std::vector<Book> &books)
         imageCtrl->SetName(wxString::Format("image_%zu", i));
         imageCtrl->SetClientData(new std::string(book.imageUrl));
         bookSizer->Add(imageCtrl, 0, wxALIGN_CENTER | wxALL, 5);
+
+        // Start downloading image in background thread
+        std::string imageUrl = book.imageUrl;
+        std::thread([imageCtrl, imageUrl]() {
+            std::vector<unsigned char> data = fetchBinary(imageUrl);
+            if (!data.empty()) {
+                wxMemoryInputStream stream(data.data(), data.size());
+                wxImage image(stream, wxBITMAP_TYPE_ANY);
+                if (image.IsOk()) {
+                    image.Rescale(150, 200, wxIMAGE_QUALITY_HIGH);
+                    wxBitmap bitmap(image);
+                    wxTheApp->CallAfter([imageCtrl, bitmap]() {
+                        imageCtrl->SetBitmap(bitmap);
+                        imageCtrl->Refresh();
+                    });
+                }
+            }
+        }).detach();
         
         wxStaticText *titleText = new wxStaticText(bookPanel, wxID_ANY, wxString::FromUTF8(book.title.c_str()), wxDefaultPosition, wxSize(300, -1), wxALIGN_CENTER);
         titleText->Wrap(300);
