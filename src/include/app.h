@@ -25,6 +25,8 @@
 #include <wx/wrapsizer.h>
 #include <wx/bitmap.h>
 #include <wx/msgdlg.h>
+#include <wx/gauge.h>
+#include <wx/timer.h>
 
 #include "book.h"
 #include "fetch_data.h"
@@ -49,12 +51,15 @@ public:
     MyFrame();
 
 private:
-    void OnFetchBooks(wxCommandEvent &event);
-    void ShowBooks(const std::vector<Book> &books);
     wxPanel *mainPanel;
     wxBoxSizer *mainSizer;
-    wxStaticText *loadingText;
     wxScrolledWindow *scrollPanel;
     wxWrapSizer *wrapSizer;
     wxButton *fetchButton;
+    wxStaticText *loadingText;
+    wxGauge *m_loadingGauge;
+    std::atomic<int> categoriesFetched = 0;
+
+    void OnFetchBooks(wxCommandEvent &event);
+    void ShowBooks(const std::vector<Book> &books);
 };

@@ -31,15 +31,27 @@ MyFrame::MyFrame()
     desc->Wrap(800);
     mainSizer->Add(desc, 0, wxALIGN_CENTER | wxBOTTOM, 15);
 
+    wxPanel* controlsPanel = new wxPanel(mainPanel);
+    wxBoxSizer* controlsSizer = new wxBoxSizer(wxVERTICAL);
+
     // Fetch Button
-    fetchButton = new wxButton(mainPanel, ID_FETCH, "Fetch Website Data");
-    mainSizer->Add(fetchButton, 0, wxALIGN_CENTER | wxALL, 10);
+    fetchButton = new wxButton(controlsPanel, ID_FETCH, "Fetch Website Data");
+    controlsSizer->Add(fetchButton, 0, wxALIGN_CENTER | wxALL, 10);
     Bind(wxEVT_BUTTON, &MyFrame::OnFetchBooks, this, ID_FETCH);
 
     // Loading Text (hidden by default)
-    loadingText = new wxStaticText(mainPanel, wxID_ANY, "Fetching data, please wait...");
+    loadingText = new wxStaticText(controlsPanel, wxID_ANY, "Fetching data, please wait...");
     loadingText->Hide();
-    mainSizer->Add(loadingText, 0, wxALIGN_CENTER | wxALL, 10);
+    controlsSizer->Add(loadingText, 0, wxALIGN_CENTER | wxALL, 10);
+
+    // Add gauge loader
+    m_loadingGauge = new wxGauge(controlsPanel, wxID_ANY, 100, wxDefaultPosition, wxSize(300, 20));
+    m_loadingGauge->SetForegroundColour(*wxGREEN);
+    m_loadingGauge->Hide();
+    controlsSizer->Add(m_loadingGauge, 0, wxALIGN_CENTER | wxALL, 5);
+
+    controlsPanel->SetSizer(controlsSizer);
+    mainSizer->Add(controlsPanel, 0, wxALIGN_CENTER | wxBOTTOM, 15);
 
     // Scrollable Panel for Books (hidden until data is fetched)
     scrollPanel = new wxScrolledWindow(mainPanel, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL);
@@ -58,16 +70,27 @@ void MyFrame::OnFetchBooks(wxCommandEvent &event)
 {
     fetchButton->Disable();
     loadingText->Show();
+    m_loadingGauge->Show();
     scrollPanel->Hide();
-    Layout();
-    Refresh();
+    mainPanel->Layout();
+    mainPanel->Refresh();
     wxYieldIfNeeded();
 
     std::thread([this]()
     {
         std::string html = fetchHTML("https://books.toscrape.com/");
         std::vector<Category> categories = parseCategories(html);
-        int categoryCount = static_cast<int>(categories.size());
+        int totalCategories = static_cast<int>(categories.size());
+
+        categoriesFetched = 0;
+
+        wxTheApp->CallAfter([this, totalCategories]() {
+            m_loadingGauge->SetRange(totalCategories);
+            m_loadingGauge->SetValue(0);
+            m_loadingGauge->Show();
+            loadingText->SetLabel(wxString::Format("Found %d categories, starting...", totalCategories));
+            mainPanel->Layout();
+        });
 
         std::vector<Book> allBooks;
         #pragma omp parallel
@@ -89,11 +112,24 @@ void MyFrame::OnFetchBooks(wxCommandEvent &event)
                 {
                     // Handle or skip
                 }
+                categoriesFetched++;
+                wxTheApp->CallAfter([this, totalCategories]() {
+                    m_loadingGauge->SetValue(categoriesFetched);
+                    loadingText->SetLabel(wxString::Format("Processing... %d / %d", categoriesFetched.load(), totalCategories));
+                });
             }
         }
-        wxTheApp->CallAfter([this, categoryCount, allBooks]()
+        wxTheApp->CallAfter([this, totalCategories, allBooks]()
         {
-            if(categoryCount < 1)
+            m_loadingGauge->SetValue(totalCategories);
+            loadingText->SetLabel("Loading complete!");
+            mainPanel->Layout();
+            wxMilliSleep(300);
+
+            m_loadingGauge->Hide();
+            loadingText->Hide();
+            fetchButton->Enable();
+            if(totalCategories < 1)
                 wxMessageBox(std::string("No category found!"), "Issue", wxOK | wxICON_WARNING);
             ShowBooks(allBooks);
         });

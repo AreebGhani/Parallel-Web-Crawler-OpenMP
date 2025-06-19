@@ -177,19 +177,27 @@ void searchBooks(GumboNode *node, std::vector<Book> &books, const Category &cate
                                 {
                                     std::string availabilityText = cleanText(textNode->v.text.text);
                                     if (availabilityText.find("In stock") != std::string::npos)
+                                    {
                                         book.availability = "Yes";
+                                    }
                                     else
+                                    {
                                         book.availability = "No";
+                                    }   
+                                }
+                                else
+                                {
+                                    book.availability = "Yes";
                                 }
                             }
                             else
                             {
-                                book.availability = "No";
+                                book.availability = "Yes";
                             }
                         }
                         else
                         {
-                            book.availability = "No";
+                            book.availability = "Yes";
                         }
                     }
                 }
