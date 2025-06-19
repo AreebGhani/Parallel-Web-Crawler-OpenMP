@@ -2,9 +2,6 @@
 
 bool MyApp::OnInit()
 {
-    SetConsoleOutputCP(CP_UTF8);
-    std::ios_base::sync_with_stdio(false);
-    setlocale(LC_ALL, ".UTF8");
     wxInitAllImageHandlers();
     MyFrame *frame = new MyFrame();
     frame->Show(true);
