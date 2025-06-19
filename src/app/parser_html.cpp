@@ -1,5 +1,5 @@
-#include "includes/parser.h"
-#include "includes/fetch.h"
+#include "parser_html.h"
+#include "fetch_html.h"
 
 std::string getAttribute(GumboNode *node, const char *tag, const char *attr)
 {
@@ -72,7 +72,7 @@ std::string getNextPageUrl(GumboNode *node, const std::string &currentUrl)
     return "";
 }
 
-void searchBooks(GumboNode *node, std::vector<Book> &books)
+void searchBooks(GumboNode *node, std::vector<Book> &books, const Category &category)
 {
     if (node->type != GUMBO_NODE_ELEMENT)
         return;
@@ -81,6 +81,7 @@ void searchBooks(GumboNode *node, std::vector<Book> &books)
     if (classAttr && std::string(classAttr->value).find("product_pod") != std::string::npos)
     {
         Book book;
+        book.category = category;
 
         GumboVector *children = &node->v.element.children;
         for (unsigned int i = 0; i < children->length; ++i)
@@ -99,7 +100,13 @@ void searchBooks(GumboNode *node, std::vector<Book> &books)
                     if (titleAttr)
                         book.title = titleAttr->value;
                     if (hrefAttr)
-                        book.link = std::string("https://books.toscrape.com/") + hrefAttr->value;
+                    {
+                        std::string relativeHref = hrefAttr->value;
+                        while (relativeHref.find("../") == 0)
+                            relativeHref = relativeHref.substr(3);
+
+                        book.link = "https://books.toscrape.com/catalogue/" + relativeHref;
+                    }
                 }
 
                 // Image
@@ -112,7 +119,9 @@ void searchBooks(GumboNode *node, std::vector<Book> &books)
                     GumboNode *img = static_cast<GumboNode *>(a->v.element.children.data[0]);   // <img>
                     GumboAttribute *src = gumbo_get_attribute(&img->v.element.attributes, "src");
                     if (src)
+                    {
                         book.imageUrl = std::string("https://books.toscrape.com/") + src->value;
+                    }
                 }
 
                 // Rating
@@ -121,7 +130,19 @@ void searchBooks(GumboNode *node, std::vector<Book> &books)
                     std::string(gumbo_get_attribute(&child->v.element.attributes, "class")->value).find("star-rating") != std::string::npos)
                 {
                     std::string classVal = gumbo_get_attribute(&child->v.element.attributes, "class")->value;
-                    book.rating = classVal.substr(classVal.find(" ") + 1);
+                    std::string ratingWord = classVal.substr(classVal.find(" ") + 1);
+                    if (ratingWord == "One")
+                        book.rating = "1/5";
+                    else if (ratingWord == "Two")
+                        book.rating = "2/5";
+                    else if (ratingWord == "Three")
+                        book.rating = "3/5";
+                    else if (ratingWord == "Four")
+                        book.rating = "4/5";
+                    else if (ratingWord == "Five")
+                        book.rating = "5/5";
+                    else
+                        book.rating = "0/5";
                 }
 
                 // Price and availability
@@ -149,8 +170,26 @@ void searchBooks(GumboNode *node, std::vector<Book> &books)
                         }
                         else if (cls == "instock availability")
                         {
-                            GumboNode *text = static_cast<GumboNode *>(grandchild->v.element.children.data[1]);
-                            book.availability = cleanText(text->v.text.text);
+                            if (grandchild->v.element.children.length > 1)
+                            {
+                                GumboNode *textNode = static_cast<GumboNode *>(grandchild->v.element.children.data[1]);
+                                if (textNode->type == GUMBO_NODE_TEXT)
+                                {
+                                    std::string availabilityText = cleanText(textNode->v.text.text);
+                                    if (availabilityText.find("In stock") != std::string::npos)
+                                        book.availability = "Yes";
+                                    else
+                                        book.availability = "No";
+                                }
+                            }
+                            else
+                            {
+                                book.availability = "No";
+                            }
+                        }
+                        else
+                        {
+                            book.availability = "No";
                         }
                     }
                 }
@@ -163,15 +202,15 @@ void searchBooks(GumboNode *node, std::vector<Book> &books)
     GumboVector *children = &node->v.element.children;
     for (unsigned int i = 0; i < children->length; ++i)
     {
-        searchBooks(static_cast<GumboNode *>(children->data[i]), books);
+        searchBooks(static_cast<GumboNode *>(children->data[i]), books, category);
     }
 }
 
-std::vector<Book> parseBooks(const std::string &html, const std::string &categoryUrl)
+std::vector<Book> parseBooks(const std::string &html, const Category &category)
 {
     std::vector<Book> allBooks;
 
-    std::string currentUrl = categoryUrl;
+    std::string currentUrl = category.url;
     std::string currentHtml = html;
 
     while (true)
@@ -179,7 +218,7 @@ std::vector<Book> parseBooks(const std::string &html, const std::string &categor
         GumboOutput *output = gumbo_parse(currentHtml.c_str());
 
         std::vector<Book> pageBooks;
-        searchBooks(output->root, pageBooks);
+        searchBooks(output->root, pageBooks, category);
         allBooks.insert(allBooks.end(), pageBooks.begin(), pageBooks.end());
 
         std::string nextUrl = getNextPageUrl(output->root, currentUrl);

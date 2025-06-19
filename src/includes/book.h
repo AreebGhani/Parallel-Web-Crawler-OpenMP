@@ -2,6 +2,12 @@
 
 #include <string>
 
+struct Category
+{
+    std::string name;
+    std::string url;
+};
+
 struct Book
 {
     std::string title;
@@ -10,10 +16,5 @@ struct Book
     std::string rating;
     std::string price;
     std::string availability;
-};
-
-struct Category
-{
-    std::string name;
-    std::string url;
+    Category category;
 };

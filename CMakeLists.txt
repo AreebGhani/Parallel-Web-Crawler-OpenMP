@@ -27,6 +27,7 @@ find_package(CURL REQUIRED)
 find_package(unofficial-gumbo CONFIG REQUIRED)
 
 include(${wxWidgets_USE_FILE})
+include_directories(${CMAKE_SOURCE_DIR}/src/includes)
 
 # -------- WIN32 flag for Windows --------
 if(WIN32)
@@ -36,12 +37,11 @@ else()
 endif()
 
 # -------- Add Executable --------
-add_executable(WebCrawlerApp ${GUI_TYPE}
-    src/main.cpp
-    src/fetch.cpp
-    src/parser.cpp
-    src/assets/logo.xpm
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
+  ${CMAKE_SOURCE_DIR}/src/*.cpp
+  ${CMAKE_SOURCE_DIR}/src/*.h
 )
+add_executable(WebCrawlerApp ${GUI_TYPE} ${SOURCES})
 
 # -------- Link Libraries --------
 target_link_libraries(WebCrawlerApp
@@ -49,6 +49,7 @@ target_link_libraries(WebCrawlerApp
     CURL::libcurl
     unofficial::gumbo::gumbo
 )
+target_include_directories(WebCrawlerApp PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
 # -------- Add OpenMP Link If Found --------
 if(OpenMP_FOUND)
