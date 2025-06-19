@@ -105,6 +105,8 @@ void MyFrame::ShowBooks(const std::vector<Book> &books)
 {
     wrapSizer->Clear(true); // remove previous items if any
 
+    ImageLoader& loader = ImageLoader::getInstance();
+
     for (size_t i = 0; i < books.size(); i++)
     {
         const Book &book = books[i];
@@ -120,23 +122,22 @@ void MyFrame::ShowBooks(const std::vector<Book> &books)
         bookSizer->Add(imageCtrl, 0, wxALIGN_CENTER | wxALL, 5);
 
         // Start downloading image in background thread
-        std::string imageUrl = book.imageUrl;
-        std::thread([imageCtrl, imageUrl]() {
-            std::vector<unsigned char> data = fetchBinary(imageUrl);
-            if (!data.empty()) {
-                wxMemoryInputStream stream(data.data(), data.size());
-                wxImage image(stream, wxBITMAP_TYPE_ANY);
-                if (image.IsOk()) {
-                    image.Rescale(150, 200, wxIMAGE_QUALITY_HIGH);
-                    wxBitmap bitmap(image);
-                    wxTheApp->CallAfter([imageCtrl, bitmap]() {
-                        imageCtrl->SetBitmap(bitmap);
-                        imageCtrl->Refresh();
-                    });
-                }
+        loader.enqueue([this, imageCtrl, url = book.imageUrl]() {
+            auto data = fetchBinary(url);
+            auto bitmap = ImageLoader::processImageData(data);
+            if(bitmap.IsOk()) {
+                wxTheApp->CallAfter([imageCtrl, bitmap]() {
+                    imageCtrl->SetBitmap(bitmap);
+                    imageCtrl->Refresh();
+                    // Clean up client data if you set it
+                    if(auto* urlPtr = static_cast<std::string*>(imageCtrl->GetClientData())) {
+                        delete urlPtr;
+                        imageCtrl->SetClientData(nullptr);
+                    }
+                });
             }
-        }).detach();
-        
+        });
+
         wxStaticText *titleText = new wxStaticText(bookPanel, wxID_ANY, wxString::FromUTF8(book.title.c_str()), wxDefaultPosition, wxSize(300, -1), wxALIGN_CENTER);
         titleText->Wrap(300);
         bookSizer->Add(titleText, 0, wxALIGN_CENTER, 0);
@@ -145,7 +146,6 @@ void MyFrame::ShowBooks(const std::vector<Book> &books)
         bookSizer->Add(new wxStaticText(bookPanel, wxID_ANY, "Rating: " + book.rating), 0, wxALIGN_CENTER);
         bookSizer->Add(new wxStaticText(bookPanel, wxID_ANY, "In Stock: " + book.availability), 0, wxALIGN_CENTER);
         bookSizer->Add(new wxHyperlinkCtrl(bookPanel, wxID_ANY, "View Book", book.link), 0, wxALIGN_CENTER, 0);
-        bookSizer->Add(new wxHyperlinkCtrl(bookPanel, wxID_ANY, "View Image", book.imageUrl), 0, wxALIGN_CENTER, 0);
 
         bookPanel->SetSizer(bookSizer);
         wrapSizer->Add(bookPanel, 0, wxALL, 10);

@@ -27,8 +27,9 @@
 #include <wx/msgdlg.h>
 
 #include "book.h"
-#include "fetch_html.h"
+#include "fetch_data.h"
 #include "parser_html.h"
+#include "image_loader.h"
 #include "assets/logo.xpm"
 
 enum
